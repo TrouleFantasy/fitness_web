@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<style>
+			.textColor{
+				color:#f00;
+				background-color:#eef;
+			}
+			.textSize{
+				font-size:50px;
+				font-weight:bold;
+			}
+			#app{
+				color:#f00;
+				background-color:#eef;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+		<p>{{message}}</p>
+		</div>
+		<div id='app2'>
+			<span v-bind:title="message">鼠标悬停查看内容</span>
+		</div>
+		<div id='app3'>
+			<p v-if="seen">现在你可以看到我了</p>
+		</div>
+		<div id="app4" :class="classWho">
+			<ol>
+				<!-- v-for = 后面的字符串中 in后面的为选中本app4区域的vue对象data中的一个数组名
+					 in前方的则用来表示每次从todos取出来的对象
+				-->
+				<li v-for="todo in todos" >
+					{{todo.text}}
+				</li>
+			</ol>
+		</div>
+		<div id="app5">
+			<!-- v-on:click="reverseMessage" 指定选中本区域的vue对象methods中的一个方法名为reverseMessage的方法
+			点击时触发-->
+			<p :class="classWho" >{{message}}</p>
+			<button v-on:click="reverseMessage">逆熵</button>
+			<button v-on:click="reverseBoolean">变换</button>
+		</div>
+		<div id="app6">
+			<!-- p标签的值取自vue对象中的message vue对象中的message值被v-model指令修改 值来源为v-model所在的input框中的值 -->
+			<p>{{message}}</p>
+			<input v-model="message" />
+		</div>
+	</body>
+	<script type="text/javascript">
+		var app=new Vue({
+			el:'#app',
+			data: {
+				message:'6666'
+			}
+		})
+		app.$data.message='7777'
+		var app2=new Vue({
+			el:'#app2',
+			data:{
+				message:'页面加载于：' + new Date()
+			}
+		})
+		var app3=new Vue({
+			el:'#app3',
+			data:{
+				seen:false
+			}
+		})
+		var app4=new Vue({
+			el:'#app4',
+			data:{
+				todos:[
+					{text:'1'},
+					{text:'2'},
+					{text:'3'},
+				],
+				classWho:{
+				textColor:true,
+				textSize:true
+				}
+			}
+		})
+		var app5=new Vue({
+			el:'#app5',
+			data:{
+				message:"Hello vue.js!",
+				classWho:{
+				textColor:true,
+				textSize:true
+				}
+			},
+			rrr:function(){
+			console.log("调用到了！");
+		},
+			methods:{
+				reverseMessage:function(){
+					/*
+					split('')  拆分为数组，括号中可以指定以什么为参考来拆分
+					reverse() 数组调用了reverse()方法 颠倒数组元素顺序
+					join('') 将数组转换为字符串，括号中可以指定分隔符 不指定则没有分隔符
+					*/
+					this.message=this.message.split('').reverse().join('')
+				},
+				reverseBoolean:function(){
+					console.log("1:"+this.classWho.textColor)
+					this.reverWho(this.classWho.textColor===true?false:true)
+					console.log("3:"+this.classWho.textColor)
+					this.$options.rrr();
+				},
+				reverWho:function(who){
+					console.log("2:"+who)
+					this.classWho.textColor=who
+					this.classWho.textSize=who
+				}
+			}
+		})
+		
+		var app6=new Vue({
+			el:'#app6',
+			data:{
+				message:'雷霆嘎巴',
+				classWho:{
+				textColor:false,
+				textSize:false
+				}
+			}
+		})
+	</script>
+</html>

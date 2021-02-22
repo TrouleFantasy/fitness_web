@@ -123,22 +123,61 @@
           //       a.setAttribute("download", 'template.xls');
           //       a.click();
           //     });
-          axios.post('/fitnessServer/foods/downLoadExcel', {
-            'N餐': this.foodCalcList
-          }).then((response) => {
-            alert("下载成功！")
-            let a = document.createElement('a');
-                  //ArrayBuffer 转为 Blob
-                  let blob = new Blob([response], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8"});
-                  let objectUrl = URL.createObjectURL(blob);
-                  a.setAttribute("href",objectUrl);
-                  a.setAttribute("download", 'template.xlsx');
-                  a.click();
+          axios.post('/fitnessServer/foods/downLoadExcel',{
+            'ui': this.foodCalcList
+          },).then((res) => {
+			  let data=res.data.data;
+			  // console.log('data在此：',data)
+			  // let myBlob=new Blob(data,{"type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+			  // var a = document.createElement("a");
+			  // a.href = window.URL.createObjectURL(myBlob);
+			  // a.download = "nb.xlsx";
+			  // a.textContent = "Download Hello World!";
+			  
+			  // document.body.appendChild(a);
+			  // a.click();
+			  this.download(this.b64toBlob(data, 'application/msword'), '饮食计划.xlsx')
           }).catch((err) => {
             console.log(err);
           })
         },
-        getSummaries(param) {
+        b64toBlob(b64Data, contentType, sliceSize) {
+          contentType = contentType || ''
+          sliceSize = sliceSize || 512
+        
+          var byteCharacters = atob(b64Data)
+          var byteArrays = []
+        
+          for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize)
+        
+            var byteNumbers = new Array(slice.length)
+            for (var i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i)
+            }
+        
+            var byteArray = new Uint8Array(byteNumbers)
+        
+            byteArrays.push(byteArray)
+          }
+        
+          var blob = new Blob(byteArrays, {
+            type: contentType
+          })
+          return blob
+        },
+        download(response, filename) {
+			console.log(response, 'ceswdddd')
+          // debugger
+          if (response.bodyUsed) throw new Error('response lock')
+          const url = URL.createObjectURL(response)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = filename
+          link.dispatchEvent(new MouseEvent('click'))
+          URL.revokeObjectURL(url)
+        },
+		getSummaries(param) {
           console.log(param)
           const { columns, data } = param;
           const sums = [];

@@ -78,9 +78,13 @@
       background: rgb(230, 255, 225);
       >div{
         width: 100%;
+        height: 700px;
         >.foodCalculation{
           width: 100%;
-
+.is-scrolling-none{
+  overflow: auto;
+  height: 600px;
+}
         }
       }
     }

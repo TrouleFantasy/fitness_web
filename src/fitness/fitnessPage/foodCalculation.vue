@@ -30,33 +30,52 @@
       </div>
     </div>
     <div id="two-2">
-      <el-table :data="foodCalcList" height="100%" style="width: 100%;">
-        <el-table-column prop="name" label="食物名">
-        </el-table-column>
-        <el-table-column prop="carbohydrate" label="碳水">
-        </el-table-column>
-        <el-table-column prop="protein" label="蛋白质">
-        </el-table-column>
-        <el-table-column prop="fat" label="脂肪">
-        </el-table-column>
-        <el-table-column label="克数">
-          <template slot-scope="scope">
-            <el-input-number size="mini" v-model="scope.row.weight" @change="weightChange(scope.row)" :min="1"
-                             :max="9999" label="描述文字"></el-input-number>
-          </template>
-        </el-table-column>
-        <el-table-column prop="fiber" label="膳食纤维">
-        </el-table-column>
-        <el-table-column prop="sodium" label="钠">
-        </el-table-column>
-        <el-table-column prop="kcal" label="热量(kcal)">
-        </el-table-column>
-        <el-table-column label="操作">
-          <template slot-scope="scope">
-            <el-button @click="deleteFood(scope.row)" type="text" size="small">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+
+<!--      <el-tabs v-model="editableTabsValue" type="card" closable @tab-remove="removeTab">-->
+<!--        <el-tab-pane-->
+<!--            v-for="(item, index) in editableTabs"-->
+<!--            :key="item.name"-->
+<!--            :label="item.title"-->
+<!--            :name="item.name"-->
+<!--        >-->
+          <el-table :data="foodCalcList"
+                    show-summary
+                    style="width: 100%;position: relative">
+            <el-table-column prop="name" label="食物名">
+            </el-table-column>
+            <el-table-column prop="carbohydrate" label="碳水">
+            </el-table-column>
+            <el-table-column prop="protein" label="蛋白质">
+            </el-table-column>
+            <el-table-column prop="fat" label="脂肪">
+            </el-table-column>
+            <el-table-column label="克数">
+              <template slot-scope="scope">
+                <el-input-number size="mini" v-model="scope.row.weight" @change="weightChange(scope.row)" :min="1"
+                                 :max="9999" label="描述文字"></el-input-number>
+              </template>
+            </el-table-column>
+            <el-table-column prop="fiber" label="膳食纤维">
+            </el-table-column>
+            <el-table-column prop="sodium" label="钠">
+            </el-table-column>
+            <el-table-column prop="kcal" label="热量(kcal)">
+            </el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button @click="deleteFood(scope.row)" type="text" size="small">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        <div v-if="btnShow"class="btn" style="position:absolute;bottom:160px;right:50px;" >
+        <el-button @click="saveRecipes()">
+          保存本餐
+        </el-button>
+        </div>
+<!--        </el-tab-pane>-->
+<!--      </el-tabs>-->
+
+
     </div>
   </div>
 </template>
@@ -66,6 +85,18 @@
   export default {
       data() {
           return {
+            btnShow:false,
+            editableTabsValue: '2',
+            editableTabs: [{
+              title: 'Tab 1',
+              name: '1',
+              content: 'Tab 1 content'
+            }, {
+              title: 'Tab 2',
+              name: '2',
+              content: 'Tab 2 content'
+            }],
+            tabIndex: 2,
               isCollapsed: false,
               backstage: [],
               list: [],
@@ -81,6 +112,58 @@
 
       },
       methods: {
+        saveRecipes(){
+          // this.getExel("/fitnessServer/foods/downLoadExcel")
+          //     .then(response => {
+          //       let a = document.createElement('a');
+          //       //ArrayBuffer 转为 Blob
+          //       let blob = new Blob([response.data], {type: "application/vnd.ms-excel"});
+          //       let objectUrl = URL.createObjectURL(blob);
+          //       a.setAttribute("href",objectUrl);
+          //       a.setAttribute("download", 'template.xls');
+          //       a.click();
+          //     });
+          axios.post('/fitnessServer/foods/downLoadExcel', {
+            'N餐': this.foodCalcList
+          }).then((response) => {
+            alert("下载成功！")
+            let a = document.createElement('a');
+                  //ArrayBuffer 转为 Blob
+                  let blob = new Blob([response], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8"});
+                  let objectUrl = URL.createObjectURL(blob);
+                  a.setAttribute("href",objectUrl);
+                  a.setAttribute("download", 'template.xlsx');
+                  a.click();
+          }).catch((err) => {
+            console.log(err);
+          })
+        },
+        getSummaries(param) {
+          console.log(param)
+          const { columns, data } = param;
+          const sums = [];
+          columns.forEach((column, index) => {
+            if (index === 0) {
+              sums[index] = '总计';
+              return;
+            }
+            const values = data.map(item => Number(item[column.property]));
+            if (!values.every(value => isNaN(value))) {
+              sums[index] = values.reduce((prev, curr) => {
+                const value = Number(curr);
+                if (!isNaN(value)) {
+                  return prev + curr;
+                } else {
+                  return prev;
+                }
+              }, 0);
+             sums[index]= sums[index].toFixed(2)
+            } else {
+              sums[index] = '';
+            }
+          });
+          return sums;
+        },
           queryFoodsByName() { //查询食物
               axios.post('/fitnessServer/foods/queryFoodsByName', {
                   name: this.foodName
@@ -99,6 +182,7 @@
               })
           },
           addFoodToList(sourceFood) { //将挑选好的食物添加到统计列表中
+          this.btnShow=true
               let food = {}
               for (let key in sourceFood) {
                   food[key] = sourceFood[key]
